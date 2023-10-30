@@ -1,5 +1,6 @@
 import streamlit as st
 import geemap.foliumap as geemap
+import ee
 
 st.title("Interactive Map")
 
@@ -8,12 +9,9 @@ options = list(geemap.basemaps.keys())
 index = options.index("OpenTopoMap")
 
 with col2:
-
     basemap = st.selectbox("Select a basemap:", options, index)
 
-
 with col1:
-
-    m = geemap.Map()
+    m = geemap.Map(center=(40, -100), zoom=4)
     m.add_basemap(basemap)
-    m.to_streamlit(height=700)
+    m.to_streamlit(height=500)
