@@ -20,7 +20,6 @@ st.markdown(
 
     The app then calculates the individual landcover types for that region and more speciifcally the areas of non-forested coverage.
 
-    
     Click on "land screening app" on the left panel.
 
     Test it out for your region! 
@@ -29,3 +28,6 @@ st.markdown(
     -NP
     """
 )
+
+st.header("Step 1: Download a GeoJSON of your ROI")
+st.image('\images\Title.PNG', caption='Click on the link at the top of the page', use_column_width=True)
