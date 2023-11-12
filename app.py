@@ -5,7 +5,7 @@ st.set_page_config(layout="wide")
 
 # Customize the sidebar
 markdown = """
-Web App URL: <https://land-screening.streamlit.app>
+Web App URL: <https://land-screening-tool.streamlit.app>
 """
 
 st.sidebar.title("About")
