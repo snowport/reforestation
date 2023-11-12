@@ -1,7 +1,3 @@
 geemap
 streamlit
 ee
-streamlit
-json
-pandas
-matplotlib.pyplot
