@@ -6,7 +6,9 @@ import json
 import pandas as pd
 import matplotlib.pyplot as plt 
 
-geemap.ee_initialize()
+@st.cache_data
+def ee_authenticate(token_name="EARTHENGINE_TOKEN"):
+    geemap.ee_initialize(token_name=token_name)
 
 # Initialize NLCD legends
 nlcd_class_names = [
