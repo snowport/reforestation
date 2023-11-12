@@ -6,6 +6,13 @@ import json
 import pandas as pd
 import matplotlib.pyplot as plt 
 
+# Customize the sidebar
+markdown = """
+Web App URL: <https://land-screening-tool.streamlit.app>
+"""
+st.sidebar.title("About")
+st.sidebar.info(markdown)
+
 # Preparing values
 json_data = st.secrets["json_data"]
 service_account = st.secrets["service_account"]
