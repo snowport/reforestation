@@ -12,18 +12,14 @@ st.sidebar.title("About")
 st.sidebar.info(markdown)
 
 # Customize page title
-st.title("Earth Engine Web App")
+st.title("Land Screening App")
 
 st.markdown(
     """
-    This multipage app template demonstrates various interactive web apps created using [streamlit](https://streamlit.io) and [geemap](https://geemap.org).
+    This webapp allows a user to define a region of interest (ROI) and then map the NLCD 2021 layer for that ROI.
+
+    The app then calculates the individual landcover types for that region and plots them on a bar graph.
+
+    Test if out for your region! Click on the "land ccreening app" on the left.
     """
 )
-
-markdown = """
-"""
-
-st.markdown(markdown)
-m = geemap.Map()
-m.add_basemap("OpenTopoMap")
-m.to_streamlit(height=500)
