@@ -6,6 +6,8 @@ import json
 import pandas as pd
 import matplotlib.pyplot as plt 
 
+ee.Initialize()
+
 # Initialize NLCD legends
 nlcd_class_names = [
     'Open Water',
