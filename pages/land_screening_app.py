@@ -81,6 +81,8 @@ nlcd_colors = {
 # Print title label
 st.title("Land Screening Application")
 
+ee_authenticate(token_name="EARTHENGINE_TOKEN")
+
 # Create a Map
 m0 = geemap.Map()
 m1 = geemap.Map()
