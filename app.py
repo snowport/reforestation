@@ -5,7 +5,7 @@ st.set_page_config(layout="wide")
 
 # Customize the sidebar
 markdown = """
-Web App URL: <https://land-screening-tool.streamlit.app>
+Web App URL: <https://land-screening.streamlit.app>
 """
 
 st.sidebar.title("About")
@@ -16,12 +16,12 @@ st.title("Land Screening Tool")
 
 st.markdown(
     """
-    This web "Land Screening Tool" application allows a user to define a region of interest (ROI) and then map the NLCD 2021 layer for that ROI.
+    This web application allows a user to define a region of interest (ROI) and then map the NLCD 2021 layer for that ROI.
 
     The app then calculates the individual landcover types for that region and more speciifcally the areas of non-forested coverage.
 
     
-    Click on "land ccreening app" on the left panel.
+    Click on "land screening app" on the left panel.
 
     Test it out for your region! 
 

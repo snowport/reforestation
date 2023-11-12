@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 
 # Customize the sidebar
 markdown = """
-Web App URL: <https://land-screening-tool.streamlit.app>
+Web App URL: <https://land-screening.streamlit.app>
 """
 st.sidebar.title("About")
 st.sidebar.info(markdown)
