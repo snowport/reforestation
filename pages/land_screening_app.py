@@ -6,10 +6,6 @@ import json
 import pandas as pd
 import matplotlib.pyplot as plt 
 
-# @st.cache_data
-# def ee_authenticate(token_name="EARTHENGINE_TOKEN"):
-#     geemap.ee_initialize(token_name=token_name)
-
 # Preparing values
 json_data = st.secrets["json_data"]
 service_account = st.secrets["service_account"]
@@ -90,8 +86,6 @@ nlcd_colors = {
 
 # Print title label
 st.title("Land Screening Application")
-
-# ee_authenticate(token_name="EARTHENGINE_TOKEN")
 
 # Create a Map
 m0 = geemap.Map()
