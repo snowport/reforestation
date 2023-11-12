@@ -6,7 +6,7 @@ import json
 import pandas as pd
 import matplotlib.pyplot as plt 
 
-ee.Initialize()
+geemap.ee_initialize()
 
 # Initialize NLCD legends
 nlcd_class_names = [
