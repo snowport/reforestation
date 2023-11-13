@@ -44,7 +44,7 @@ if shapefile is not None:
     gdf = gpd.read_file(temp_dir.name)
 
     # Add the shapefile as a layer on the map
-    map.add_gdf(gdf, layer_name="Uploaded Shapefile")
+    # map.add_gdf(gdf, layer_name="Uploaded Shapefile")
 
 # Initialize NLCD legends
 nlcd_class_names = [
@@ -114,10 +114,6 @@ nlcd_colors = {
     'Emergent Herbaceous Wetlands': '#6c9fb8',
 }
 
-# Define the date range for your Landsat imagery
-start_date = '2020-01-01'
-end_date = '2022-12-31'
-
 # Print title label
 st.title("Land Screening Application")
 
@@ -125,6 +121,7 @@ st.title("Land Screening Application")
 m0 = geemap.Map()
 m1 = geemap.Map()
 m2 = geemap.Map()
+ms = geemap.Map()
 
 # Initialize df
 df = pd.DataFrame()
@@ -134,7 +131,7 @@ col1, col2 = st.columns(2)
 
 with col1:
     # Create a button to open the URL in a new tab
-    st.write("Visit GeoJson.io to get a JSON of your region of interest (ROI):")
+    st.write(f"Visit GeoJson.io to get a JSON of your region of interest (ROI):")
     url = "https://geojson.io/#map=7.17/38.451/-80.677"
     st.markdown(f'<a href="{url}" target="_blank">Open GeoJSON.io</a>', unsafe_allow_html=True)
     
@@ -164,14 +161,15 @@ with col2:
     slope_threshold = selected_slope_threshold
 
     # Allow the user to input start and end dates
-    start_date = st.text_input("Enter the start date (e.g., YYYY-MM-DD):")
-    end_date = st.text_input("Enter the end date (e.g., YYYY-MM-DD):")
+    start_date = st.text_input("Enter the start date (e.g., YYYY-MM-DD):", "2020-01-01")
+    end_date = st.text_input("Enter the end date (e.g., YYYY-MM-DD):","2021-12-31")
 
     # Add the selected basemap for m1 and m2
     m1.add_basemap("SATELLITE")
     m2.add_basemap("TERRAIN")
+    ms.add_basemap("TERRAIN")
 
-m0.to_streamlit()
+m0.to_streamlit(width=800)
 
 # Button to set the selected geometry as ROI
 if st.button("Calculate NLCD") and roi_geometry:
@@ -195,10 +193,12 @@ if st.button("Calculate NLCD") and roi_geometry:
     # Add a legend for the NLCD data
     m1.add_legend(builtin_legend='NLCD')
 
-    st.header("NLCD Map")
+    col1, col2 = st.columns(2)
 
-    # Display the map
-    m1.to_streamlit(height = 500, add_layer_control = True)
+    with col1:
+
+        st.header("NLCD Map")
+        m1.to_streamlit(height = 500, add_layer_control = True)
 
     # Define forested areas (NLCD class 41, 42, and 43) and slope threshold
     forested = nlcd.eq(41).And(nlcd.eq(42)).And(nlcd.eq(43))
@@ -214,6 +214,20 @@ if st.button("Calculate NLCD") and roi_geometry:
 
     # Apply an algorithm to an image to compute the slope
     slope = ee.Terrain.slope(elevation)
+    slope_vis = {'min':0, 'max':40, 'palette': 'rainbow'}
+    ms.addLayer(slope, slope_vis, "Slope")
+    ms.centerObject(roi)
+    
+    # Add a colorbar for the slope layer
+    ms.add_colorbar(
+        vis_params = slope_vis,
+        label = "Slope"
+    )
+
+    with col2: 
+
+        st.header("Slope Map")
+        ms.to_streamlit()
 
     # Create a binary mask for slopes less than threshold
     slope_lt_threshold_mask = slope.lt(slope_threshold)
@@ -380,10 +394,10 @@ if st.button("Calculate NLCD") and roi_geometry:
     
     st.header("Plantable Areas Map")
     
-    st.write(f"Total plantable areas that are non-forested and less than slope threshold:  {total_area_nf:.2f} ({(total_area_nf / total_area * 100):.2f}% of total ROI)")
+    st.write(f"Total plantable areas that are non-forested and less than slope threshold:  {total_area_nf:.2f} sq. km ({(total_area_nf / total_area * 100):.2f}% of total ROI)")
 
     m3 = geemap.Map()
-    m3.centerObject(roi, 11)
+    m3.centerObject(roi)
     m3.add_basemap("TERRAIN")
     
     # Filter and mask the Landsat-8 collection
