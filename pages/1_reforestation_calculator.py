@@ -10,9 +10,9 @@ import tempfile
 import zipfile
 import datetime
 import os
-import shutil
 from PIL import Image
 import time
+import shutil
 
 def cleanup_temp_directory(temp_dir):
     try:
@@ -35,7 +35,7 @@ def mask_clouds(image):
 
 # Customize the sidebar
 markdown = """
-Web App URL: <https://land-screening-tool.streamlit.app>
+Web App URL: <https://reforestation.streamlit.app>
 """
 st.sidebar.title("About")
 st.sidebar.info(markdown)
@@ -94,12 +94,9 @@ if shapefile is not None:
         zip_ref.extractall(temp_dir.name)
 
     # Read the shapefile using GeoPandas
-    gdf = gpd.read_file(temp_dir.name)
-
-    # # Add the shapefile as a layer on the map
-    # map = geemap.Map()
-    # map.add_gdf(gdf, layer_name="Uploaded Shapefile")
-
+    custom_shape = gpd.read_file(temp_dir.name)
+else: 
+    custom_shape = None
 
 # Allow the user to upload a GeoTIFF file
 st.sidebar.header("Upload Geotiff")
@@ -110,16 +107,23 @@ if tiff is not None:
     temp_dir = tempfile.mkdtemp()
 
     # Save the uploaded file to the temporary directory
-    temp_file_path = os.path.join(temp_dir, tiff.name)
-    with open(temp_file_path, "wb") as temp_file:
+    temp_image_path = os.path.join(temp_dir, tiff.name)
+    with open(temp_image_path, "wb") as temp_file:
         temp_file.write(tiff.read())
 
-    # Read the image
-    image = Image.open(temp_file_path)
-    # st.image(image)
-    # Read the uploaded GeoTIFF file
-    # Add the GeoTIFF to the map
-    # m.add_raster(temp_file_path, colormap='gray', layer_name='Uploaded GeoTIFF')
+    # # Upload the image to Earth Engine
+    # asset_id = '/users/noahportman/folder-or-collection-id/new-asset' 
+    # image = ee.Image.load(temp_image_path, asset_id)
+
+    # # print the image
+    # print(image)
+    
+    # Read the tiff as an image
+    uploaded_image = Image.open(temp_image_path)
+
+else:
+    temp_image_path = None
+    uploaded_image = None
 
 # Initialize NLCD legends
 nlcd_class_names = [
@@ -188,7 +192,6 @@ nlcd_colors = {
     'Woody Wetlands': '#b8d9eb',
     'Emergent Herbaceous Wetlands': '#6c9fb8',
 }
-
 color_mapping_esa = {
     10: "#006400",  # Tree cover
     20: "#ffbb22",  # Shrubland
@@ -216,12 +219,12 @@ ms = geemap.Map()
 df = pd.DataFrame()
 
 # Add a selectbox for choosing the slope threshold
-st.header("1. Define the slope threshold for your reforestation project")
+st.header("STEP 1: Define the slope threshold for your reforestation project")
 slope_threshold_options = [30, 20, 10]
 slope_threshold = st.selectbox("Select Slope Threshold (%)", slope_threshold_options)
 
 # Allow the user to input start and end dates
-st.header("2. Enter the start/end date for a satellite overlaid image")
+st.header("STEP 2: Enter the start date and end date for a satellite image overlay")
 start_date = st.text_input("Enter the start date (e.g., YYYY-MM-DD):", "2021-01-01")
 end_date = st.text_input("Enter the end date (e.g., YYYY-MM-DD):","2021-12-31")
 
@@ -230,12 +233,12 @@ m1.add_basemap("SATELLITE")
 m2.add_basemap("TERRAIN")
 ms.add_basemap("TERRAIN")
 
-st.header("3. Define ROI")
-st.write(f"Visit GeoJson.io to copy the JSON of your region of interest (ROI):")
+st.header("STEP 3: Define the ROI (region of interest)")
+st.write(f"Visit GeoJson.io to copy the JSON of your ROI:")
 url = "https://geojson.io/#map=7.17/38.451/-80.677"
 st.markdown(f'<a href="{url}" target="_blank">Open GeoJSON.io</a>', unsafe_allow_html=True)
 
-geojson_json = st.text_area("Paste JSON script of the ROI here:", "")
+geojson_json = st.text_area("Paste the JSON script of your ROI here:", "")
 
 if geojson_json != "":
     custom_geojson = json.loads(geojson_json)
@@ -259,7 +262,23 @@ if geojson_json != "":
 
     esa = ee.ImageCollection('ESA/WorldCover/v100').first().clip(roi_geometry)
 
-    m0.add_layer(esa, color_mapping_esa, 'ESA Landcover')
+    # m0.add_layer(esa, color_mapping_esa, 'ESA Landcover')
+    
+    if custom_shape is not None:
+        m0.add_gdf(custom_shape, layer_name="Uploaded Shapefile")
+
+    # if tiff is not None:
+    #     # Use the uploaded image from earth engine assets
+    #     input_image = ee.Image(uploaded_image)
+        
+    #     # # Get a URL for the Earth Engine image
+    #     # image_url = input_image.getThumbUrl({'min': 0, 'max': 255})
+
+    #     # # Add the Earth Engine image as a TileLayer to the Folium map
+    #     # ee_tile_layer = geemap.ee_tile_layer(input_image, {'min': 0, 'max': 255}, "Landcover.io")
+    #     # m0.add_layer(ee_tile_layer)
+
+    #     m0.add_raster(input_image, colormap='gray', layer_name = "Landcover.io raster")
 
     image_count = int(collection.size().getInfo())
 
@@ -273,7 +292,7 @@ if geojson_json != "":
         limited_collection = sorted_collection.limit(image_count)
 
     # Select the first (clearest) image from the sorted collection
-    clearest_image = limited_collection.median().clip(roi_geometry)
+    clearest_image = limited_collection.first().clip(roi_geometry)
 
     m0.addLayer(clearest_image, {'bands': ['B4', 'B3', 'B2'],  # True color bands
                 'min': 0,
@@ -285,22 +304,13 @@ if geojson_json != "":
     with col1:
         m0.to_streamlit(height=500)
 
-        if tiff is not None:
-            st.header("Landcover from PEARL landcover.io:")
-            st.image(image)
-
-            with open(temp_file_path, "rb") as file:
-                btn = st.download_button(label="Download image",  
-                                    data = file, 
-                                    file_name = "landcoverio_download", 
-                                    mime="image/png"
-                                )
+        if uploaded_image is not None:
+            st.write("Landcover NAIP layer from PEARL landcover.io:")
+            st.image(uploaded_image)
                 
     with col2:
         
-        st.write(f'Number of images in the range provided: {image_count}')
-
-        st.write("Satellite imagery (clearest dates):")
+        st.write(f'Number of clear satellite images in the range provided: {image_count}')
 
         # Iterate through the collection and extract timestamps
         timestamps = []
@@ -313,8 +323,12 @@ if geojson_json != "":
         # Convert the list to a Pandas DataFrame for a table format
         dates_df = pd.DataFrame({'Date': timestamps})
 
-        # Print the DataFrame
-        st.write(dates_df)
+        # # Print the DataFrame
+        # st.write("Satellite imagery (for clearest dates):")
+        # st.dataframe(dates_df)
+
+    st.header("STEP 4: Calculate Landcover Area and Map the Potential Areas for Reforestation")
+    st.write("Click on the button below to calculate the NLCD map and landcover type breakdown for your ROI.")
 
     # Button to set the selected geometry as ROI
     if st.button("Calculate"):
@@ -365,6 +379,7 @@ if geojson_json != "":
         )
 
         col1, col2 = st.columns(2)   
+        
         with col1:
             st.header("NLCD Lancover Types")
             m1.to_streamlit(height = 500, add_layer_control = True)
@@ -426,11 +441,11 @@ if geojson_json != "":
 
             total_area = forested_area + non_forested_area
         
+        st.header("Landcover Class Breakdown")
+
         col1, col2 = st.columns(2)   
         
         with col1:
-            
-            st.header("Landcover Class Breakdown")
             
             # Display the total areas for forested and non-forested areas with percentages
             st.write(f"Total Forested Area: {forested_area:.2f} Sq. Km ({(forested_area / total_area * 100):.2f}%)")
@@ -452,10 +467,6 @@ if geojson_json != "":
             st.pyplot(plt)
 
         with col2:
-            st.markdown(" \
-                            \
-                            \
-                        ")
             # Create a pie plot
             fig, ax = plt.subplots(figsize=(2,2))
             labels = ['Forested', 'Non-Forested']
@@ -471,7 +482,7 @@ if geojson_json != "":
             ax.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
 
             # Display the pie plot in Streamlit
-            st.pyplot(fig)
+            # st.pyplot(fig)
 
             # Calculate zonal statistics within the defined ROI
             nlcd_stats = masked_non_forested_nlcd.reduceRegion(
@@ -490,11 +501,11 @@ if geojson_json != "":
             df['Sum'] = pd.to_numeric(df['Sum'])
             df = df.sort_values(by='Sum', ascending = False)
         
+        st.header("Non-Forested Landcover Class Breakdown")
+
         col1, col2 = st.columns(2)
 
         with col1:
-
-            st.header("Non-Forested Landcover Class Breakdown")
 
             df = df.sort_values(by='Sum', ascending = True)
 
