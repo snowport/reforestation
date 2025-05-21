@@ -1,4 +1,8 @@
-geemap
 streamlit
-ee
+earthengine-api
+geemap
+geopandas
+pandas
+matplotlib
+Pillow
 setuptools
