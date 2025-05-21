@@ -114,6 +114,9 @@ venv.bak/
 .spyderproject
 .spyproject
 
+# Streamlit secrets (never push to GitHub)
+.streamlit/secrets.toml
+
 # Rope project settings
 .ropeproject
 
